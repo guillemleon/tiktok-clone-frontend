@@ -12,6 +12,7 @@ const videoController = new Video();
 export function ForYouVideos() {
 
     const [videos, setVideos] = useState(null);
+    const [indexStart, setIndexStart] = useState(null);
     const { accessToken } = useAuth();
 
     useEffect(() => {
@@ -28,8 +29,7 @@ export function ForYouVideos() {
     }, [accessToken]);
 
     const onViewChangeRef = useRef(({ viewableItems }) => {
-        console.log(viewableItems[0].index)
-        console.log("AAAAAAAAA")
+        setIndexStart(viewableItems[0].index)
     })
 
     if (!videos) return null;
@@ -38,13 +38,12 @@ export function ForYouVideos() {
         <FlatList
             data={videos}
             decelerationRate="fast"
-            keyExtractor={(_, index) => {
-                index.toString()
-            }}
+            keyExtractor={(_, index) => index.toString()}
             renderItem={({ item, index }) => (
                 <VideoFeed
                     index={index}
                     item={item}
+                    indexShow={indexStart}
                 />
             )}
             removeClippedSubviews={false}
@@ -52,6 +51,7 @@ export function ForYouVideos() {
             snapToInterval={height - ENV.TAB_MENU_HEIGHT}
             onViewableItemsChanged={onViewChangeRef.current}
             viewabilityConfig={{ viewAreaCoveragePercentThreshold: 50 }}
+            initialScrollIndex={indexStart}
             onScrollToIndexFailed={() => {
             }}
         />

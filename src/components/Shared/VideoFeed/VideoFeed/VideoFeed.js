@@ -1,17 +1,33 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useCallback } from 'react';
 import { View, Pressable } from "react-native";
 import { Text } from "react-native-elements";
 import { styles } from "./VideoFeed.styles";
+import { useFocusEffect } from "@react-navigation/native";
 import { Video } from "expo-av";
+import { Info } from "../Info";
+import { TimeLine } from "../TimeLine";
+import { Profile } from "../Profile";
+import { Likes } from "../Likes";
+import { Comments } from "../Comments";
+import { Share } from "../Share";
 
 export function VideoFeed(props) {
-
-    const { item } = props;
+    const { item, indexShow, index, style } = props;
     const [isStarted, setIsStarted] = useState(false);
+    const [videoStatus, setVideoStatus] = useState(null);
     const video = useRef(null);
+    const user = item.user_data;
+
+    useFocusEffect(
+        useCallback(() => {
+            setIsStarted(index === indexShow)
+
+            return () => setIsStarted(false)
+        }, [index, indexShow])
+    );
 
     const startPauseVideo = () => {
-        setIsStarted(prevState => !isStarted);
+        setIsStarted(prevState => !prevState);
     }
 
     return (
@@ -22,27 +38,44 @@ export function VideoFeed(props) {
             {/* VIDEO... */}
             <Video
                 ref={video}
-                style={styles.video}
+                style={[styles.video, style]}
                 source={{ uri: item.video }}
                 resizeMode="cover"
                 isLooping
                 shouldPlay={isStarted}
+                onPlaybackStatusUpdate={(status) => setVideoStatus(status)}
             />
 
             <View style={styles.blockContent}>
                 <View style={styles.blockLeft}>
-                    <Text>{item.user_data.username}</Text>
-                    <Text>{item.description}</Text>
+                    <Info
+                        username={user.username}
+                        description={item.description}
+                    />
                 </View>
                 <View style={styles.blockRight}>
-                    <Text>Profile</Text>
-                    <Text>Likes</Text>
-                    <Text>Comments</Text>
-                    <Text>Share</Text>
+                    <Profile
+                        idUser={item.user}
+                        image={user.avatar}
+                    />
+                    <Likes
+                        idVideo={item.id}
+                        likesCounter={item.likes_counter}
+                        idTargetUser={user.id}
+                    />
+                    <Comments
+                        idUser={user.id}
+                        idVideo={item.id}
+                    />
+                    <Share
+                        idVideo={item.id}
+                        sharedCounter={item.shared_counter}
+                        idTargetUser={user.id}
+                    />
                 </View>
             </View>
 
-            {/* TODO: TIME LINE */}
+            {videoStatus && <TimeLine status={videoStatus}/>}
         </Pressable>
     );
 }
